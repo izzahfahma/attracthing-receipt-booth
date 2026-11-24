@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>NUYE FEST — Photo Receipt</title>
+<style>
+:root{--ink:#171717;--paper:#f5f3ee;--line:#d8d5ce;--muted:#77736c}
+*{box-sizing:border-box}
+body{margin:0;background:#e9e7e1;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
+main{width:min(100%,560px);margin:auto;padding:18px 16px 36px}
+header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #c9c6bf;padding:5px 0 14px}
+.brand{font-size:13px;font-weight:900;letter-spacing:.16em}
+.tag{font:10px ui-monospace,monospace;letter-spacing:.1em;border:1px solid var(--ink);padding:5px 7px}
+h1{font-size:27px;line-height:1.02;letter-spacing:-.06em;margin:22px 0 7px}
+.sub{color:var(--muted);font-size:12px;margin:0 0 18px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:15px;padding:13px;margin:12px 0}
+.camera{position:relative;background:#171717;border-radius:10px;overflow:hidden;aspect-ratio:4/3;display:grid;place-items:center}
+video{width:100%;height:100%;object-fit:cover;display:block}
+#placeholder{color:#d8d5ce;text-align:center;font-size:12px;padding:20px}
+.camera-label{position:absolute;left:10px;top:10px;color:white;background:#0009;padding:5px 7px;border-radius:4px;font:10px ui-monospace,monospace;letter-spacing:.08em}
+.controls{display:flex;gap:8px;margin-top:11px}
+button{border:0;border-radius:9px;padding:13px 14px;font-size:13px;font-weight:750;cursor:pointer}
+.primary{background:var(--ink);color:white;flex:1}
+.secondary{background:#efeee9;color:var(--ink);border:1px solid var(--line)}
+button:disabled{opacity:.4;cursor:not-allowed}
+label{display:block;font-size:10px;letter-spacing:.1em;font-weight:800;color:var(--muted);margin:0 0 6px}
+input{width:100%;border:1px solid var(--line);border-radius:8px;padding:11px 10px;background:#fff;font:14px -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;color:var(--ink)}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.receipt-wrap{background:#dedbd3;border-radius:10px;padding:14px;display:flex;justify-content:center}
+#receipt{width:100%;max-width:290px;background:#fff;color:#111;padding:17px 15px 15px;text-align:center;box-shadow:0 2px 12px #0001}
+.r-top{font:900 19px/1 Arial,sans-serif;letter-spacing:.08em}
+.r-sub{font:9px ui-monospace,monospace;letter-spacing:.18em;margin-top:5px}
+.r-rule{border-top:1px dashed #555;margin:12px 0}
+#photo{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#eee;filter:grayscale(1) contrast(1.13)}
+.r-name{font:800 14px/1.2 Arial,sans-serif;margin-top:11px;overflow-wrap:anywhere}
+.r-message{font:9px ui-monospace,monospace;line-height:1.5;letter-spacing:.04em;margin-top:7px}
+.r-meta{display:flex;justify-content:space-between;font:8px ui-monospace,monospace;color:#333}
+.r-foot{font:800 9px ui-monospace,monospace;letter-spacing:.08em;line-height:1.5}
+.hint{font-size:11px;color:var(--muted);line-height:1.5;margin:10px 2px 0}
+.status{font-size:11px;line-height:1.45;color:var(--muted);min-height:16px;margin:8px 2px 0}
+footer{text-align:center;color:var(--muted);font:9px ui-monospace,monospace;letter-spacing:.08em;padding:20px 0 0}
+.hidden{display:none!important}
+@media print{body{background:white}main{padding:0}.no-print{display:none!important}#receipt{max-width:none;width:384px;box-shadow:none;margin:0 auto}.receipt-wrap{padding:0;background:white}}
+</style>
+</head>
+<body>
+<main>
+<header class="no-print"><div class="brand">ATTRACTHING STUDIO</div><div class="tag">PHOTO RECEIPT / 01</div></header>
+<section class="no-print">
+<h1>YOUR NUYE<br>FEST MOMENT.</h1>
+<p class="sub">Ambil foto, personalisasi struk, lalu simpan untuk dicetak.</p>
+<div class="panel">
+<div class="camera">
+<video id="video" autoplay playsinline muted class="hidden"></video>
+<div id="placeholder">Kamera belum dinyalakan.<br>Tekan “AKTIFKAN KAMERA” untuk mulai.</div>
+<div class="camera-label">LIVE CAMERA</div>
+</div>
+<div class="controls">
+<button id="start" class="primary">AKTIFKAN KAMERA</button>
+<button id="switch" class="secondary" disabled>↻</button>
+</div>
+<div class="controls">
+<button id="capture" class="primary" disabled>AMBIL FOTO</button>
+<button id="retake" class="secondary" disabled>ULANGI</button>
+</div>
+<p id="cameraStatus" class="status" aria-live="polite"></p>
+</div>
+<div class="panel">
+<div class="fields">
+<div><label for="guest">NAMA / PANGGILAN</label><input id="guest" maxlength="24" placeholder="Nama kamu"></div>
+<div><label for="eventDate">TANGGAL EVENT</label><input id="eventDate" value="26 NOV 2026" maxlength="18"></div>
+</div>
+<div style="margin-top:11px"><label for="message">PESAN PENUTUP</label><input id="message" value="THANK YOU FOR BEING HERE." maxlength="42"></div>
+</div>
+</section>
+<section class="panel">
+<div class="no-print" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+<strong style="font-size:12px;letter-spacing:.1em">PREVIEW STRUK</strong><span style="font:10px ui-monospace,monospace;color:#777">THERMAL / 57 MM</span>
+</div>
+<div class="receipt-wrap">
+<div id="receipt">
+<div class="r-top">NUYE FEST</div>
+<div class="r-sub">KENDAL · 2026</div>
+<div class="r-rule"></div>
+<img id="photo" alt="Hasil foto photobooth" src="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27800%27 height=%27600%27%3E%3Crect width=%27800%27 height=%27600%27 fill=%27%23e8e8e8%27/%3E%3Ctext x=%27400%27 y=%27300%27 text-anchor=%27middle%27 font-family=%27Arial%27 font-size=%2730%27 fill=%27%23777%27%3EYOUR PHOTO HERE%3C/text%3E%3C/svg%3E">
+<div class="r-name" id="previewName">YOUR NAME HERE</div>
+<div class="r-message" id="previewMessage">THANK YOU FOR BEING HERE.</div>
+<div class="r-rule"></div>
+<div class="r-meta"><span id="previewDate">26 NOV 2026</span><span>NUYE / 01</span></div>
+<div class="r-rule"></div>
+<div class="r-foot">A LITTLE MEMORY<br>FROM NUYE FEST ♡</div>
+</div>
+</div>
+<div class="controls no-print">
+<button id="save" class="primary" disabled>SIMPAN GAMBAR STRUK</button>
+<button id="share" class="secondary" disabled>BAGIKAN</button>
+</div>
+<p class="hint no-print">Simpan gambar PNG, lalu buka di aplikasi PeriPage untuk mencetak. Pastikan ukuran kertas 57/58 mm dan sesuaikan kepadatan cetak bila perlu.</p>
+<p id="saveStatus" class="status no-print" aria-live="polite"></p>
+</section>
+<footer>MADE FOR NUYE FEST · ATTRACTHING STUDIO</footer>
+</main>
+<canvas id="work" width="384" height="760" class="hidden"></canvas>
+<script>
+const $=id=>document.getElementById(id);
+const video=$('video'), canvas=$('work'), ctx=canvas.getContext('2d');
+let stream=null, facing='user', captured=null;
+const dateInput=$('eventDate'), guest=$('guest'), message=$('message');
+function updatePreview(){
+ $('previewName').textContent=guest.value.trim()||'YOUR NAME HERE';
+ $('previewDate').textContent=dateInput.value.trim()||'NUYE FEST';
+ $('previewMessage').textContent=message.value.trim()||'THANK YOU FOR BEING HERE.';
+}
+[guest,dateInput,message].forEach(el=>el.addEventListener('input',updatePreview));
+async function startCamera(){
+ try{
+  if(stream) stream.getTracks().forEach(t=>t.stop());
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:1280},height:{ideal:960}},audio:false});
+  video.srcObject=stream; video.classList.remove('hidden'); $('placeholder').classList.add('hidden');
+  $('start').textContent='KAMERA AKTIF'; $('capture').disabled=false; $('switch').disabled=false;
+  $('cameraStatus').textContent='Kamera siap. Posisikan wajah di tengah frame.';
+ }catch(e){$('cameraStatus').textContent='Kamera tidak bisa dibuka. Izinkan akses kamera untuk Safari, lalu muat ulang halaman.';}
+}
+$('start').addEventListener('click',startCamera);
+$('switch').addEventListener('click',()=>{facing=facing==='user'?'environment':'user';startCamera();});
+$('capture').addEventListener('click',()=>{
+ if(!video.videoWidth)return;
+ const w=video.videoWidth,h=video.videoHeight, target=4/3;
+ let sx=0,sy=0,sw=w,sh=h;
+ if(w/h>target){sw=h*target;sx=(w-sw)/2;}else{sh=w/target;sy=(h-sh)/2;}
+ const c=document.createElement('canvas');c.width=800;c.height=600;
+ c.getContext('2d').drawImage(video,sx,sy,sw,sh,0,0,800,600);
+ captured=c; $('photo').src=c.toDataURL('image/jpeg',.92);
+ $('save').disabled=false;$('share').disabled=false;
+ $('cameraStatus').textContent='Foto berhasil diambil. Periksa preview struk di bawah.';
+});
+$('retake').addEventListener('click',()=>{captured=null;$('photo').removeAttribute('src');$('save').disabled=true;$('share').disabled=true;$('cameraStatus').textContent='Silakan ambil foto lagi.';});
+function makeReceipt(){
+ if(!captured)return null;
+ const W=384, pad=24, photoH=288;
+ const name=(guest.value.trim()||'YOUR NAME HERE').toUpperCase();
+ const date=(dateInput.value.trim()||'NUYE FEST').toUpperCase();
+ const msg=(message.value.trim()||'THANK YOU FOR BEING HERE.').toUpperCase();
+ const wrap=(text,max)=>{let words=text.split(/\s+/),lines=[],line='';for(const word of words){let test=line?line+' '+word:word;if(ctx.measureText(test).width>max&&line){lines.push(line);line=word;}else line=test;}if(line)lines.push(line);return lines;};
+ ctx.font='bold 19px Arial';const nameLines=wrap(name,W-48);
+ ctx.font='10px monospace';const msgLines=wrap(msg,W-48);
+ const H=540+nameLines.length*18+msgLines.length*15;
+ canvas.width=W;canvas.height=H;ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.fillStyle='#111';ctx.textAlign='center';
+ let y=34;ctx.font='900 25px Arial';ctx.fillText('NUYE FEST',W/2,y);y+=20;
+ ctx.font='11px monospace';ctx.fillText('KENDAL · 2026',W/2,y);y+=18;
+ ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();ctx.setLineDash([]);y+=14;
+ ctx.save();ctx.filter='grayscale(1) contrast(1.13)';ctx.drawImage(captured, pad,y,W-pad*2,photoH);ctx.restore();y+=photoH+19;
+ ctx.font='bold 19px Arial';nameLines.forEach(line=>{ctx.fillText(line,W/2,y);y+=18;});y+=5;
+ ctx.font='10px monospace';msgLines.forEach(line=>{ctx.fillText(line,W/2,y);y+=15;});y+=13;
+ ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();ctx.setLineDash([]);y+=17;
+ ctx.font='10px monospace';ctx.textAlign='left';ctx.fillText(date,pad,y);ctx.textAlign='right';ctx.fillText('NUYE / 01',W-pad,y);y+=22;
+ ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();ctx.setLineDash([]);y+=19;
+ ctx.textAlign='center';ctx.font='bold 11px monospace';ctx.fillText('A LITTLE MEMORY',W/2,y);y+=15;ctx.fillText('FROM NUYE FEST ♥',W/2,y);
+ return new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+}
+async function saveImage(){
+ const blob=await makeReceipt();if(!blob)return null;
+ const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='NUYE-FEST-photo-receipt.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+ $('saveStatus').textContent='Gambar PNG dibuat. Jika Safari menampilkan preview, tekan Share lalu Save Image / Simpan ke Foto.';
+ return blob;
+}
+$('save').addEventListener('click',saveImage);
+$('share').addEventListener('click',async()=>{
+ const blob=await makeReceipt();if(!blob)return;
+ const file=new File([blob],'NUYE-FEST-photo-receipt.png',{type:'image/png'});
+ if(navigator.canShare&&navigator.canShare({files:[file]})){
+  try{await navigator.share({files:[file],title:'NUYE FEST Photo Receipt'});$('saveStatus').textContent='Pilih PeriPage jika tersedia, atau simpan gambar ke Photos.';}catch(e){}
+ }else{await saveImage();}
+});
+updatePreview();
+</script>
+</body>
+</html>
